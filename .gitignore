@@ -1,0 +1,7 @@
+backend/._node_modules
+._.gitignore
+backend/._package-lock.json
+backend/._.env
+backend/._index.js
+backend/src/config/._db.js
+backend/._package.json

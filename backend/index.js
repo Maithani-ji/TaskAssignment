@@ -1,15 +1,23 @@
+
 import express from 'express';
 import cors from 'cors';
 import connectDB from './src/config/db.js';
-import dotenv from 'dotenv'
-
-dotenv.config()
+import dotenv from 'dotenv';
+ dotenv.config(); 
 
 const app = express();
 app.use(cors())
+//  CORS EXTRAS...
+
+// const corsOptions = {
+//     origin: 'http://example.com',  // Allow only requests from this origin
+//     methods: ['GET', 'POST'],     // Allow only GET and POST methods
+//   };
+//   app.use(cors(corsOptions));
+
 app.use(express.json())
 // Connect to MongoDB
-connectDB();
+await connectDB();
 
 const PORT_URL = process?.env?.PORT
 app.listen(PORT_URL,"0.0.0.0", () => {
