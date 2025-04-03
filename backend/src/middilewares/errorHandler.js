@@ -11,6 +11,7 @@ export const errorHandler =(err,req,res,next) => {
         message,
         // stack: err.stack || null,  // Optional: Show error stack trace
     })
+    next()
 }
 // Not found handler 
 export const notFoundHandler=(req,res,next)=>{
@@ -19,4 +20,5 @@ res.status(404).json({
     success:false,
     message:"Route Not Found",
 })
+next()
 }

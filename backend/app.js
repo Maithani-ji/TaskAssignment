@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
-import connectDB from "./src/config/db.js";
+import helmet from "helmet";
+import compression from "compression";
+import cookieParser from "cookie-parser";
 import { requestLogger } from "./src/middilewares/requestLogger.js";
 import { logger } from "./src/config/logger.js";
 //  Auth Routes
@@ -10,12 +12,18 @@ import authRoute from "./src/routes/authRoutes.js"
 // Error middlewares
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
+
+
  
 dotenv.config(); 
 
 const app = express();
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));  // Optional: for form data
+
+// Use cookie-parser middleware
+app.use(cookieParser());
+
 app.use(cors())
 //  CORS EXTRAS...
 
@@ -25,13 +33,35 @@ app.use(cors())
 //   };
 //   app.use(cors(corsOptions));
 
+
+// for basic daefault protection
+// can also customise it into middileware for more security
+app.use(helmet())
+
+// for api response ,payloads to compress the data to be send to client
+app.use(compression({
+    level:6,// mid level compression... 1 to 9 1 (fast, least compression) to (slow, high compression).
+    threshold:0,//This means all responses will be compressed, regardless of size.
+    // threshold: 1024, // compress data larger than 1024 kb
+    filter: (req, res) => {
+        if (req.headers["accept-encoding"]?.includes("gzip")) {
+            return true; // Enable compression if client supports gzip
+        }
+    
+        if (req.headers["x-no-compression"]) {
+            return false; // Disable compression if client explicitly requests no compression
+        }
+    
+        return compression.filter(req, res); // Use default behavior
+    },
+}))
+
 // for standalone use 
 // app.use(morgan("dev"))
 // Morgan with logger 
 app.use(morgan("combined", { stream: {write:(message)=> logger.info(message.trim()) }}))
 app.use(requestLogger)
-// Connect to MongoDB
-await connectDB();
+
 
 // for succes handling
 app.use(successHandler)
@@ -40,10 +70,11 @@ app.use(successHandler)
 app.use("/api/auth",authRoute)
 
 
-// Global error handler
-app.use(errorHandler)
+
 // Error handling no route middleware
 app.use(notFoundHandler)
+// Global error handler
+app.use(errorHandler)
 export default app
 
 
