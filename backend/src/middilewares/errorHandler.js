@@ -6,9 +6,11 @@ export const errorHandler =(err,req,res,next) => {
     const statusCode=err.status || 500
     const message =err.message || "Internal server Error"
     logger.error("Error",{message,stack:err.stack})
+    const data=err.data || null
     res.status(statusCode).json({
         success:false,
         message,
+        ...(data && {data:data}),
         // stack: err.stack || null,  // Optional: Show error stack trace
     })
     next()

@@ -1,13 +1,13 @@
 import { logger } from "../config/logger.js";
 
 export const successHandler=(req,res,next)=>{
-    res.success=(statusCode=200,message="Success",data={},meta=null)=>{
+    res.success=(statusCode=200,message="Success",data=null,meta=null)=>{
         logger.info(`[Success]: ${message}`)
 
         const response={
             success:true,
             message,
-            data,
+            ...(data && {data}),
         }
         if(meta)//if meta data available
         {

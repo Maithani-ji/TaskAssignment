@@ -3,30 +3,24 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { logger } from "../config/logger.js";
 import { sendVerificationEmail } from "../service/emailService.js";
-import { generateAccessToken, generateRefreshToken } from "../service/tokenService.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { RefreshToken } from "../models/RefreshToken.js";
 
 
-// Registering new user 
+// Registering new user with $-express-validators
 export const register = async (req, res,next) => {
     try {
         
-        logger.info("Recieved Registration Request")
+        logger.info("Recieved Registration Request after validation")
         const { name, email, password} = req.body;
 
-        // ✅ Validate inputs
-        if (!name || !email || !password) {
-            // logger.warn("Validation failed : Missing required Fields")
-            const error= new Error("Missing required Fields");
-            error.status=400;
-            throw error
-        }
+      
 
         // ✅ Check if user already exists
         const existingUser = await User.findOne({ email }).lean();
         if (existingUser) {
             const error= new Error(`User already exists with :${email} `);
-            error.status=400;
+            error.status=409; // conflict , duplicaate data
             throw error
             
         }
@@ -57,11 +51,11 @@ export const verifyEmail= async(req,res,next)=>{
         logger.info("Verifying email started")
         const {verification_token} = req.query;
         
-        const user = await User.findOne({verificationToken:verification_token}).lean();
+        const user = await User.findOne({verificationToken:verification_token});
         if(!user)
         {
             const error =new Error("Email Verification failed .User not found with verification token or token is expired !")
-            error.status=404;
+            error.status=401;
             throw error;
         }
         user.verificationToken = null;
@@ -80,27 +74,21 @@ export const signIn=async(req,res,next)=>{
     try {
         const {email,password} = req.body;
         // check fields if any missing
-        if(!email || !password)
-        {
-            const error=new Error("Missing required fields for sign In.")
-            error.status=400;
-            throw error;
-        }
-        logger.info(`Sign in process started for : ${email}`)
+        logger.info(`Sign in process started for : ${email} after validation`)
 
         const user =await User.findOne({email}).lean();
         // check if any user is present for that login or not 
         if(!user)
         {
             const error=new Error(`User not found with email : ${email} `);
-            error.status=404;
+            error.status=401;//unauthorized or unauthenticated 401
             throw error;
         }
         // if user id active or not if any present
         if(user && !user?.isVerified)
         {
             const error=new Error("User is not verified. Please verify your email first.")
-            error.status=403;
+            error.status=403; // forbidden but authorized , unauthorized or unauthenticated 401
             throw error;
         }
         
@@ -132,48 +120,53 @@ export const signIn=async(req,res,next)=>{
 // sign out user which will have header of access token
 export const signOut = async (req, res, next) => {
     try {
-        logger.info("Sign Out process started");
+        
+        logger.info("Sign Out process started after it validation");
 
         // Extract refresh token from cookies or request body
         const refreshToken =  req.body.refreshToken || req.cookies.refreshToken ;
         // Extract type and userId from request body, defaulting type to "One"
-        const { type = "One", userId } = req.body;
+        const { type , userId } = req.body;
 
+        
         // If logging out from a single session
         if (type === "One") {
-            if (!refreshToken) {
-                const error = new Error("Missing refresh token id for particular signout");
-                error.status = 400;
-                throw error;
-            }
-            // Log the action before deleting the refresh token
+
+            // Check if refresh token provided  is valid
+        const tokenRecord = await RefreshToken.findOne({ token: refreshToken });
+
+        if (!tokenRecord) {
+          logger.warn("Invalid or already used refresh token");
+        }
+            //  deleting the refresh token if available
         logger.info("Deleting a specific refresh token from RefreshToken db");
             // Delete the refresh token from the database
         await RefreshToken.deleteOne({ token: refreshToken });
 
-            // Clear refresh token cookie if it exists
-        if (req.cookies.refreshToken) {
-                res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" });
-            }
-        } 
+        }
         
+        //  cehck
         // If logging out from all sessions
         else if (type === "All") {
-            // Ensure userId is provided for logging out from all sessions
-        if (!userId) {
-                const error = new Error("Missing user id for all sign out");
-                error.status = 400;
-                throw error;
-            }
 
+            // Check if userId provided is valid
+            const user=await User.findOne({_id:userId})
+            if(!user)
+            {
+                logger.warn("User not found for the logged in sessions")
+            }
+            //  deleting all refresh tokens if user available
             logger.info("Deleting all refresh tokens for this user");
             // Delete all refresh tokens associated with the user
         await RefreshToken.deleteMany({ userId });
 
-            if (req.cookies.refreshToken) {
-                res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" });
-            }
+    
         }
+          // Clear refresh token cookie if it exists
+             if (req.cookies.refreshToken) {
+                logger.info("Deleting refresh token from cookies");ß
+               res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" });
+            }
 
         // Respond with success message after logout
                 res.status(200).json({ success: true, message: "Logged out Successfully" });
