@@ -62,7 +62,7 @@ export const siginingInValidationRules=()=>
     body("password").notEmpty().withMessage("Password is required"),
 ]
 
-// for sign out with custom req and use of OneOf like switch
+// for sign out with custom req 
 export const signingOutValidationRules=()=>
      [
         body("type").notEmpty().withMessage("Type is required").bail().isIn(["One",
@@ -84,4 +84,9 @@ export const signingOutValidationRules=()=>
         //   return true;
         // }),
 
+]
+
+// for new access token 
+export const accessTokenValidationRules =()=>[
+  check("refreshToken").notEmpty().withMessage("Refresh Token is required").bail().isString().withMessage("Refresh Token must be string"),
 ]

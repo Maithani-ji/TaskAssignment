@@ -14,7 +14,7 @@ return jwt.sign({userId:user?._id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1
 export const verifyAccessToken=(token)=>{
     logger.info("Verifying Access Token")
     // verifying access token which return err or decoded data
-    return jwt.verify({token:token},process.env.ACCESS_TOKEN_SECRET)
+    return jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
 }
 
 // REFRESH Token
@@ -28,5 +28,5 @@ return jwt.sign({userId:user?._id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:"
 export const verifyRefreshToken=(token)=>{
     logger.info("Verifying Refresh Token")
     // verifying refresh token which return err or decoded data
-    return jwt.verify({token:token},process.env.REFRESH_TOKEN_SECRET)
+    return jwt.verify(token,process.env.REFRESH_TOKEN_SECRET)
 }

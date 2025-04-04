@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { logger } from "../config/logger.js";
 import { sendVerificationEmail } from "../service/emailService.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import { RefreshToken } from "../models/RefreshToken.js";
 
 
@@ -117,11 +117,11 @@ export const signIn=async(req,res,next)=>{
     }
 }
 
-// sign out user which will have header of access token
+// sign out user which will have header authorization of access token
 export const signOut = async (req, res, next) => {
     try {
         
-        logger.info("Sign Out process started after it validation");
+        logger.info("Sign Out process started after its authorization  and validation");
 
         // Extract refresh token from cookies or request body
         const refreshToken =  req.body.refreshToken || req.cookies.refreshToken ;
@@ -174,3 +174,49 @@ export const signOut = async (req, res, next) => {
         next(error);
     }
 };
+
+// new access token initilaization if older get expired only if refresh token is active
+export const accessToken = async (req, res, next) => {
+    try {
+      logger.info("Acess token generation started after validation");
+  
+      const refreshToken =  req.body.refreshToken || req.cookies.refreshToken ;
+
+    // verify refresh token
+      const decoded = verifyRefreshToken(refreshToken);
+      const { userId } = decoded;
+  
+      // Find user by ID
+      const user = await User.findById(userId).lean();
+      if (!user) {
+        const error = new Error("User not found");
+        error.status = 401;
+        throw error;
+      }
+  
+      // Generate new access token
+      const accessToken = generateAccessToken(userId);
+  
+      logger.info("Access token generated successfully");
+      res.success(201, "New Access Token generated", {accessToken});
+  
+    } catch (err) {
+      logger.error("Access token generation failed:", err.message);
+
+      // remove refresh token in cookie if available and old one is gone 
+      if (req.cookies.refreshToken) {
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          secure: true,       // true in production with HTTPS
+          sameSite: "Strict", // or "Lax" depending on your frontend
+        });
+        logger.info("Refresh token cookie cleared due to error.");
+      }
+
+
+      const error = new Error(err.message || "Invalid token");
+      error.status = err.status || 401;
+       next(error);
+    }
+  };
+  
