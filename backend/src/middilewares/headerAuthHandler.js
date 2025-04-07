@@ -2,7 +2,7 @@ import { logger } from "../config/logger.js";
 import { verifyAccessToken } from "../utils/jwt.js";
 
 export const headerAuthentication= (req,res,next)=>{
-    logger.info("Header authentication started")
+    logger.info("Header authorization started")
 
     //  validate header authorization
     if(!req?.headers?.authorization)
@@ -25,6 +25,7 @@ export const headerAuthentication= (req,res,next)=>{
     }
     try {
        const decoded= verifyAccessToken(token)
+    //    sending decoded in request as decoded key not in any body ,query or params
        req.decoded=decoded;
        
        
@@ -34,6 +35,6 @@ export const headerAuthentication= (req,res,next)=>{
         error.status=401;
         return next(error);
     }
-    logger.info("Header authorization successful")
+    logger.info("Header authorization successfull")
     next()
 }

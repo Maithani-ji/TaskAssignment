@@ -7,11 +7,13 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import { requestLogger } from "./src/middilewares/requestLogger.js";
 import { logger } from "./src/config/logger.js";
-//  Auth Routes
+// Api  Routes 
 import authRoute from "./src/routes/authRoutes.js" 
+import taskRoute from "./src/routes/taskRoutes.js";
 // Error middlewares
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
+
 
 
  
@@ -68,7 +70,7 @@ app.use(successHandler)
 
 // Routes
 app.use("/api/auth",authRoute)
-
+app.use("/api/task",taskRoute)
 
 
 // Error handling no route middleware

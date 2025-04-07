@@ -195,7 +195,7 @@ export const accessToken = async (req, res, next) => {
       }
   
       // Generate new access token
-      const accessToken = generateAccessToken(userId);
+      const accessToken = generateAccessToken(user);
   
       logger.info("Access token generated successfully");
       res.success(201, "New Access Token generated", {accessToken});
