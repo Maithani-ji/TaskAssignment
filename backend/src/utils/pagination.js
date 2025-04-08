@@ -101,7 +101,7 @@ export const paginateWithSkipLimit = async (Model, options = {}) => {
 
         if(isFetchAll)
         {
-            const data= await Model.find(preparedFilter).sort(newSort).select(select).populate(Object.keys(newPopulate).length? newPopulate:"").lean()
+            const data= await Model.find(preparedFilter).sort(newSort).select(select).populate(Object.keys(newPopulate).length? newPopulate:"").lean().exec()
             return buildResponse(data,newFilter)
         }
 
@@ -111,8 +111,8 @@ export const paginateWithSkipLimit = async (Model, options = {}) => {
         const skip=(newPage-1)*newLimit
 
         const [totalDocs,data]=await Promise.all([
-            Model.countDocuments(preparedFilter),
-            Model.find(preparedFilter).sort(newSort).skip(skip).limit(limit).select(select).populate(Object.keys(newPopulate).length? newPopulate:"").lean(),
+            Model.countDocuments(preparedFilter).exec(),
+            Model.find(preparedFilter).sort(newSort).skip(skip).limit(limit).select(select).populate(Object.keys(newPopulate).length? newPopulate:"").lean().exec(),
         ])
         return buildResponse(data,newFilter,totalDocs,newPage,newLimit)
     } catch (err) {
@@ -138,7 +138,7 @@ export const paginateWithCursor=async(Model,query={},options={})=>{
     }
     // fecth data
 
-    const data= await Model.find(paginationQuery).sort({[sortField]:sortOrder}).limit(limit).select(select).populate(populate).lean()
+    const data= await Model.find(paginationQuery).sort({[sortField]:sortOrder}).limit(limit).select(select).populate(populate).lean().exec()
 
     // prepeare next cursor from last document or data from the current page
     const nextCursor=data.length? data[data.length-1][sortField]:null;
