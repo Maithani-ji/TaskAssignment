@@ -1,6 +1,7 @@
 import { logger } from "../config/logger.js";
 import Task from "../models/Task.js";
 import User from "../models/User.js";
+import { paginateWithSkipLimit } from "../utils/pagination.js";
 
 // create task
 export const createTask=async(req,res,next)=>{
@@ -22,13 +23,20 @@ export const createTask=async(req,res,next)=>{
 export const getTasks=async(req,res,next)=>{
     try {
     logger.info("Getting all tasks after authentication and validation")
-    // way to get particaular data from db
-    
+
+    const query=req.query
+    // ways to get particaular data from db
+
+    // 1ST WAY
     // const tasks=await Task.find({status:"pending"}, "title description status dueDate")
-    const tasks=await Task.find().
-      populate({ path:"assignedTo",select:"name email role" }).lean()
-    logger.info("All Task fetched successfully")
-    res.success(200,"Tasks fetched successfully",{tasks})
+
+    // 2ND WAY
+    // const tasks=await Task.find().populate({ path:"assignedTo",select:"name email role" }).lean()
+    // logger.info("All Task fetched successfully")
+
+    // 3RD WAY a basic paginateGenricMethod
+    const tasks=await paginateWithSkipLimit(Task,query)
+    res.success(200,"Tasks fetched successfully",tasks)
 } catch (error) {
         next(error)
 }

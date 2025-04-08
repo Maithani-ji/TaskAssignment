@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { body, check } from "express-validator";
+import { body, check, query } from "express-validator";
 import User from "../models/User.js";
 
 // for create task
@@ -33,6 +33,23 @@ export const taskCreationValidationRules=()=>[
     }), 
 ]
 
+// helper method for checking validJSON data
+const isValidJson = (value, { path }) => {
+  if (typeof value !== "string") {
+      throw new Error(`Expected a string for "${path}", but got ${typeof value}`);
+  }
+
+  try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed !== "object" || parsed === null) {
+          throw new Error(`"${path}" should be a valid JSON object or array`);
+      }
+      return true;
+  } catch (e) {
+      throw new Error(`Invalid JSON in "${path}": ${e.message}`);
+  }
+};
+
 // for fetch all tasks
 export const taskFetchAllValidationRules = () => [
   check("dummy") // <-- Dummy field name
@@ -61,4 +78,33 @@ export const taskFetchAllValidationRules = () => [
 
       return true;
     }),
+    query("page")
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage("Page must be an integer greater than or equal to 1")
+        .toInt(),
+
+    query("limit")
+        .optional()
+        .custom(value => value === "all" || (Number(value) > 0 && Number.isInteger(Number(value))))
+        .withMessage("Limit must be a positive integer or the string all "),
+
+    query("select")
+        .optional()
+        .isString()
+        .withMessage("Select must be a string")
+        .trim(),
+
+    query("populate")
+        .optional()
+        .custom(isValidJson),
+
+    query("filter")
+        .optional()
+        .custom(isValidJson),
+
+    query("sort")
+        .optional()
+        .custom(isValidJson),
 ];
+
