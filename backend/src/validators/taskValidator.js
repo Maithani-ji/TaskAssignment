@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { body, check, query } from "express-validator";
+import { body, check, param, query } from "express-validator";
 import User from "../models/User.js";
 
 // for create task
@@ -108,3 +108,89 @@ export const taskFetchAllValidationRules = () => [
         .custom(isValidJson),
 ];
 
+// for fetch particular task by id 
+export const taskFetchByIdValidationRules = () => [
+
+  param("id").notEmpty().withMessage("task id is required").bail().custom(async (value) => {
+    if(!mongoose.Types.ObjectId.isValid(value))
+    {
+      throw new Error("Invalid task id")
+    }
+    return true
+  }),
+  
+]
+//  for all tasks for a user
+export const taskFetchByUserIdValidationRules = () => [
+  param("id").notEmpty().withMessage("user id is required").bail().custom(async (value) => {
+    if(!mongoose.Types.ObjectId.isValid(value))
+    {
+      throw new Error("Invalid user id")
+    }
+    return true
+  }),
+  
+]
+//  for updating task by id
+export const taskUpdateValidationRules = () => [
+   // Validate task ID from params
+   param("id")
+   .notEmpty().withMessage("Task id is required")
+   .bail()
+   .custom((value) => {
+     if (!mongoose.Types.ObjectId.isValid(value)) {
+       throw new Error("Invalid task id");
+     }
+     return true;
+   }),
+
+ // Validate title (optional in update, but if provided, should not be empty)
+ body("title")
+   .optional()
+   .notEmpty().withMessage("Title cannot be empty"),
+
+ // Validate description
+ body("description")
+   .optional()
+   .notEmpty().withMessage("Description cannot be empty"),
+
+ // Validate dueDate
+ body("dueDate")
+   .optional()
+   .isISO8601().withMessage("Due date must be a valid date")
+   .bail()
+   .custom((value) => {
+     if (new Date(value) < new Date()) {
+       throw new Error("Due date must be a future date");
+     }
+     return true;
+   }),
+
+ // Validate status
+ body("status")
+   .optional()
+   .isIn(["pending", "completed"]).withMessage("Status must be either pending or completed"),
+
+ // Validate assignedTo
+ body("assignedTo")
+   .optional()
+   .custom((value) => {
+     if (!mongoose.Types.ObjectId.isValid(value)) {
+       throw new Error("Invalid assignedTo user ID");
+     }
+     return true;
+   }),
+]
+// for deleting task by id 
+export const taskDeleteValidationRules = () => [
+  // Validate task ID from params
+  param("id")
+  .notEmpty().withMessage("Task id is required")
+  .bail()
+  .custom((value) => {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new Error("Invalid task id");
+    }
+    return true;
+  }),
+]

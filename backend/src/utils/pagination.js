@@ -90,13 +90,13 @@ export const paginateWithSkipLimit = async (Model, options = {}) => {
         const defaultSort = { createdAt: -1, _id: -1 };
         const newSort =Object.keys(sort).length ? parseObject(sort) : defaultSort;
         
-        console.log(newSort);
+        // console.log(newSort);
         
        
         
         // Prepared Filter
         const preparedFilter = prepareFilter(newFilter);
-        console.log(preparedFilter);
+        // console.log(preparedFilter);
         const isFetchAll=limit==="all"
 
         if(isFetchAll)

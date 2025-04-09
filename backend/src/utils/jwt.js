@@ -8,7 +8,7 @@ export const generateAccessToken=(user)=>{
     logger.info("Generating Access Token for User")
     // Generate access token with user id and secret key and expiration time of 15 minutes
     // this token will be used for authenticated access 
-return jwt.sign({userId:user?._id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"1h"})
+return jwt.sign({userId:user?._id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:"6h"})
 }
 
 export const verifyAccessToken=(token)=>{
