@@ -21,6 +21,17 @@ const userSchema = new mongoose.Schema({
     strict: "throw", // ✅ This prevents extra fields like "iddd"
 });
 
+// Schema Middileware for document-> save(),validate().remove()  and query ->.find() .findOneAndDelete() (cascading deletion) 
+userSchema.pre("save", async function(next){
+    //  will get the document itself in this 
+    console.log("schema middidleware called",this)
+    next()
+})
+userSchema.pre("findOneAndDelete", function(next) {
+    // will get the working query of document and not the dcument itself
+    console.log("About to update user:", this._conditions,this);
+    next();
+  });
 // static methods and instance methods :::: use normal function as "this" keyword wont work in arrwo functino and gives you undefined
 
 // get user by email // STATIC METHOD
