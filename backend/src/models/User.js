@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { RefreshToken } from "./RefreshToken.js";
+import { logger } from "../config/logger.js";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -27,10 +29,28 @@ userSchema.pre("save", async function(next){
     console.log("schema middidleware called",this)
     next()
 })
-userSchema.pre("findOneAndDelete", function(next) {
+userSchema.pre("findOneAndDelete",async function(next) {
+    try
+  {  logger.info("schema middidleware find and delete called for user refreh token")
     // will get the working query of document and not the dcument itself
-    console.log("About to update user:", this._conditions,this);
-    next();
+    // console.log("About to delete user refreh token:", this._conditions,this);
+    const filter = this.getFilter()
+    // console.log("filter",filter)
+
+    const user = await this.model.findOne(filter).lean();
+    if(!user)
+    {
+        const error=new Error("User not found")
+        error.status=404
+        throw error
+    }
+     await RefreshToken.deleteMany({userId:user._id})
+    logger.info("user refreh tokens deleted successfully")
+    next();}
+    catch(err)
+    {
+        next(err)
+    }
   });
 // static methods and instance methods :::: use normal function as "this" keyword wont work in arrwo functino and gives you undefined
 
