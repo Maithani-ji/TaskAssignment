@@ -22,6 +22,12 @@ const taskSchema= new mongoose.Schema({
     strict: "throw",
 })
 
+// INSTANCE METHOD for getting overdue status of a task 
+
+taskSchema.methods.getOverdueStatus = function() {
+ return new Date(this.dueDate) < new Date()
+}
+
 const Task= mongoose.model("Task",taskSchema)
 
 export default Task

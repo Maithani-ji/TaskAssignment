@@ -21,7 +21,19 @@ const userSchema = new mongoose.Schema({
     strict: "throw", // ✅ This prevents extra fields like "iddd"
 });
 
+// static methods and instance methods :::: use normal function as "this" keyword wont work in arrwo functino and gives you undefined
+
+// get user by email // STATIC METHOD
+userSchema.statics.getUserByEmailStaticMethod=async function (email){
+    const user = await this.findOne({email}).select("-password").lean();
+    return user
+}
+
+
+
 
 const User=mongoose.model("User",userSchema)
 
+
+// Instance method 
 export default User;

@@ -131,6 +131,17 @@ export const taskFetchByUserIdValidationRules = () => [
   }),
   
 ]
+// for overdue task status
+export const taskOverdueStatusValidationRules = () => [
+  param("id").notEmpty().withMessage("task id is required").bail()
+  .custom(value=> {
+    if(!mongoose.Types.ObjectId.isValid(value))
+    {
+      throw new Error("Invalid Task id")
+    }
+    return true
+  },
+  )]
 //  for updating task by id
 export const taskUpdateValidationRules = () => [
    // Validate task ID from params

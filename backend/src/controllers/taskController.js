@@ -82,7 +82,23 @@ export const getTasksByUser=async(req,res,next)=>{
         next(error)
     }
 }
+// get overdue status of a task
+export const getOverdueStatus=async(req,res,next)=>{
+    try {
+        logger.info("Getting overdue status of a task after authentication and validation")
 
+        const task=await Task.findById(req.params.id)
+        if(!task){
+            const error=new Error("Task not found")
+            error.status=404
+            throw error
+        }
+        const status= await task.getOverdueStatus()
+        res.success(200,"Overdue status fetched successfully",{status})
+    } catch (error) {
+        next(error)
+    }
+}
 // update task 
 export const updateTaskById=async(req,res,next)=>{
     try {

@@ -10,6 +10,7 @@ import { logger } from "./src/config/logger.js";
 // Api  Routes 
 import authRoute from "./src/routes/authRoutes.js" 
 import taskRoute from "./src/routes/taskRoutes.js";
+import userRoute from "./src/routes/userRoutes.js";
 // Error middlewares
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
@@ -71,7 +72,7 @@ app.use(successHandler)
 // Routes
 app.use("/api/auth",authRoute)
 app.use("/api/task",taskRoute)
-
+app.use("/api/user",userRoute)
 
 // Error handling no route middleware
 app.use(notFoundHandler)
