@@ -26,7 +26,9 @@ const userSchema = new mongoose.Schema({
 // Schema Middileware for document-> save(),validate().remove()  and query ->.find() .findOneAndDelete() (cascading deletion) 
 userSchema.pre("save", async function(next){
     //  will get the document itself in this 
-    console.log("schema middidleware called",this)
+
+    // console.log("schema middidleware called",this)
+    console.log("schema middidleware called")
     next()
 })
 userSchema.pre("findOneAndDelete",async function(next) {
