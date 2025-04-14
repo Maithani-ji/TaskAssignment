@@ -22,14 +22,9 @@ export const getUserByEmail=async(req,res,next)=>{
 export const deleteUser=async(req,res,next)=>{
     logger.info("Deleting user with cascading delete of refresh token after authentication and validation")
     try {
-        
+        //  already checking user in schema middilware of pre(findOneAndDelete)
         const user = await User.findOneAndDelete({_id:req.params.id})
-        if(!user)
-        {
-            const error=new Error("User not found")
-            error.status=404
-            throw error
-        }
+      
         res.success(200,"User deleted successfully",{user})
     } catch (error) {
         next(error)

@@ -34,9 +34,16 @@ userSchema.pre("findOneAndDelete",async function(next) {
   {  logger.info("schema middidleware find and delete called for user refreh token")
     // will get the working query of document and not the dcument itself
     // console.log("About to delete user refreh token:", this._conditions,this);
+    
     const filter = this.getFilter()
+    if(!filter?._id)
+    {
+        const error=new Error("User id not found")
+        error.status=404
+        throw error
+    }
     // console.log("filter",filter)
-
+logger.info("filter to find and delete user refreh token",filter)
     const user = await this.model.findOne(filter).lean();
     if(!user)
     {
@@ -45,7 +52,7 @@ userSchema.pre("findOneAndDelete",async function(next) {
         throw error
     }
      await RefreshToken.deleteMany({userId:user._id})
-    logger.info("user refreh tokens deleted successfully")
+    logger.info("user refresh tokens deleted successfully")
     next();}
     catch(err)
     {
