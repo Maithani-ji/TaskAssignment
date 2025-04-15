@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { logger } from "../config/logger.js";
 import Task from "../models/Task.js";
 import { paginateWithSkipLimit } from "../utils/pagination.js";
@@ -142,6 +143,95 @@ export const deleteTaskById=async(req,res,next)=>{
         }
         res.success(200,"Task deleted successfully",task)
     } catch (error) {
+        next(error)
+    }
+}
+
+// aggregation pipelines
+
+// task status summary by grouping
+export const getTaskSummary=async(req,res,next)=>{
+    try {
+        logger.info("Getting task status summary after authentication and validation")
+      const pipeline=[{$group:{_id:"$status",count:{$sum:1}}}]
+        const tasks=await Task.aggregate(pipeline)
+        res.success(200,"Task status summary fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+
+}
+// no of tasks assigned to a user 
+
+export const getTasksCountByUser=async(req,res,next)=>{
+    try {
+        logger.info("Getting task count of a user after authentication and validation")
+        const pipeline=[{$match:{assignedTo: new mongoose.Types.ObjectId(req.params.id)}},{
+            $count:"Tasks",
+        }]
+        const tasks=await Task.aggregate(pipeline)
+        res.success(200,"Task count of a user fetched successfully",tasks)
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+// get tasks due this week
+
+export const getTasksDueByMonth=async(req,res,next)=>{
+    try {
+        logger.info("Getting task due by months  after authentication and validation")
+        const startMonth= new Date()
+        startMonth.setMonth(new Date().getMonth())
+        const endMonth=new Date()
+        endMonth.setMonth((new Date().getMonth())+2)
+        console.log(startMonth,endMonth);
+        // const startMonth= new Date()
+        // startMonth.setMonth(new Date().getMonth())
+        // startMonth.setHours(0,0,0,0)
+        // const endMonth=new Date()
+        // endMonth.setMonth((new Date().getMonth())+2)
+        // endMonth.setHours(0,0,0,0)
+        // console.log(startMonth,endMonth);
+
+        
+// bonus tip  If you want to include everything until the end of the second month, you can do:
+
+// endMonth.setMonth(endMonth.getMonth() + 1);
+// endMonth.setDate(0); // goes to last day of the month
+// endMonth.setHours(23, 59, 59, 999);
+        const pipeline=[{$match:{dueDate:{$gt:startMonth,$lte:endMonth}}},
+            {$sort:{dueDate:1}},
+            // {$count:"tasks"},
+            {$facet:{
+                tasks:[
+                    {
+                    $lookup:{
+                    from:"users",
+                    localField:"assignedTo",
+                    foreignField:"_id",
+                    as:"assignedTo",
+                }},
+                {
+                    $unwind:"$assignedTo",
+                },
+                {
+                    $project:{
+                       "assignedTo.password":0,
+                    },
+                },
+
+            ],
+                totalCount:[{$count:"tasks"}],
+            }},
+        ]
+        const tasks=await Task.aggregate(pipeline)
+        res.success(200,"Task due by month fetched successfully",tasks)
+
+    }
+    catch(error)
+    {
         next(error)
     }
 }

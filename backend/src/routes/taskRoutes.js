@@ -1,5 +1,5 @@
 import express from "express";
-import { createTask, deleteTaskById, getOverdueStatus, getTaskById, getTasks, getTasksByUser, updateTaskById } from "../controllers/taskController.js";
+import { createTask, deleteTaskById, getOverdueStatus, getTaskById, getTasks, getTasksByUser, getTasksCountByUser, getTasksDueByMonth, getTaskSummary, updateTaskById } from "../controllers/taskController.js";
 import { headerAuthentication } from "../middilewares/headerAuthHandler.js";
 import { taskCreationValidationRules, taskDeleteValidationRules, taskFetchAllValidationRules, taskFetchByIdValidationRules, taskFetchByUserIdValidationRules, taskOverdueStatusValidationRules, taskUpdateValidationRules } from "../validators/taskValidator.js";
 import { validate } from "../middilewares/validateHandler.js";
@@ -12,6 +12,9 @@ taskRoute.get("/tasks",headerAuthentication,taskFetchAllValidationRules(),valida
 taskRoute.get("/task-by-id/:id",headerAuthentication,taskFetchByIdValidationRules(),validate,getTaskById)
 taskRoute.get("/tasks-by-user/:id",headerAuthentication,[...taskFetchByIdValidationRules(),taskFetchByUserIdValidationRules()],validate,getTasksByUser)
 taskRoute.get("/:id/overdue-task-status",headerAuthentication,taskOverdueStatusValidationRules(),validate,getOverdueStatus)
+taskRoute.get("/task-summary",headerAuthentication,getTaskSummary)
+taskRoute.get("/task-count-by-user/:id",headerAuthentication,getTasksCountByUser)
+taskRoute.get("/task-due-by-month",headerAuthentication,getTasksDueByMonth)
 
 taskRoute.patch("/update-task-by-id/:id",headerAuthentication,taskUpdateValidationRules(),validate,updateTaskById)
 taskRoute.delete("/delete-task-by-id/:id",headerAuthentication,taskDeleteValidationRules(),validate,deleteTaskById)
