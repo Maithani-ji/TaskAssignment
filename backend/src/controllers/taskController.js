@@ -235,3 +235,125 @@ export const getTasksDueByMonth=async(req,res,next)=>{
         next(error)
     }
 }
+// get top 3 users with most completed task
+export const getTopEmployee=async(req,res,next)=>{
+    try {
+        logger.info("Getting top employee after authentication and validation")
+        const pipeline=[
+            {
+            $match:{status:"completed"},
+        },
+            {
+                $group:{
+                _id:"$assignedTo",
+                completedTask:{$sum:1},
+            }},
+            {
+                $facet:{
+                    task:[
+                        {
+                    $lookup:{
+                        from:"users",
+                        localField:"_id",
+                        foreignField:"_id",
+                        as:"assignedTo",
+                    }},
+                    {$unwind:"$assignedTo"},
+                    {
+                        $match:{
+                            "assignedTo.role":"employee",
+                        },
+                    },
+                   { $project:
+                    {
+                     "assignedTo.name":1,
+                    //  "assignedTo.email":1,
+                     "assignedTo.role":1,
+                     completedTask:1,
+                    },
+                    },
+                    
+                ],
+                },
+            },
+        ]
+        const tasks=await Task.aggregate(pipeline)
+        res.success(200,"Top employee fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+}
+
+// get overdue task group by user
+export const getOverdueTaskByUser=async(req,res,next)=>{
+    try {
+        logger.info("Getting overdue task by user after authentication and validation")
+        const pipeline=[
+            {
+                $match:{status:"pending",dueDate:{$lt:new Date(2026,1,1)}},
+            },
+            {
+                $group:{
+                    _id:"$assignedTo",
+                    overdueTask:{$sum:1},
+                },
+            },
+            {
+                $sort:{overdueTask:-1},
+            },
+            {
+                $facet:{
+                    task:[
+                        {
+                            $lookup:{
+                                from:"users",
+                                localField:"_id",
+                                foreignField:"_id",
+                                as:"assignedTo"},
+                        },
+                        {
+                            $unwind:"$assignedTo",
+                        },
+                        {
+                            $project:
+                            {
+                                "assignedTo.name":1,
+                                "assignedTo.email":1,
+                                "assignedTo.role":1,
+                                overdueTask:1,
+                            },
+                        },
+                    ],
+                },
+            },
+        ]
+        const tasks= await Task.aggregate(pipeline)
+        res.success(200,"Overdue task by user fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+}
+//  get monthly task ompleted trend
+export const getMonthlyTaskCompletedTrend=async(req,res,next)=>{
+    try {
+        logger.info("Getting monthly task completed trend after authentication and validation")
+        const pipeline=[
+            {
+                $match:{status:"completed"},
+            },
+            {
+                $group:{
+                    _id:{month:{$month:"$updatedAt"},year:{$year:"$updatedAt"}},
+                    completedTask:{$sum:1},
+                },
+            },
+            {
+                $sort:{"_id.month":-1,"_id.year":-1},
+            },
+        ]
+        const tasks=await Task.aggregate(pipeline)
+        res.success(200,"Monthly task completed trend fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+}
