@@ -14,6 +14,7 @@ import userRoute from "./src/routes/userRoutes.js";
 // Error middlewares
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
+import { tokenBucketLimiter } from "./src/middilewares/rateLimitterHandler.js";
 
 
 
@@ -69,6 +70,8 @@ app.use(requestLogger)
 // for succes handling
 app.use(successHandler)
 
+// for rate limiting
+app.use(tokenBucketLimiter("rate:global",{}))
 // Routes
 app.use("/api/auth",authRoute)
 app.use("/api/task",taskRoute)

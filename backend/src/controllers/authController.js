@@ -5,6 +5,7 @@ import { logger } from "../config/logger.js";
 import { sendVerificationEmail } from "../service/emailService.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import { RefreshToken } from "../models/RefreshToken.js";
+import {redisClient} from "../config/redis.js";
 
 
 // Registering new user with $-express-validators
@@ -104,6 +105,13 @@ export const signIn=async(req,res,next)=>{
         const accessToken= generateAccessToken(user)
         const refreshToken= generateRefreshToken(user)
 
+
+        //  saving refresh token in redis
+        logger.info("Saving refresh token in redis")
+        await redisClient.setEx(`refreshToken:${user._id}`, 60 * 60 * 24 * 7, refreshToken)
+
+
+
         // saving refresh token in RefreshToke db
         logger.info("Saving refresh token in RefreshToken db")
         const refresh_token= await RefreshToken.create({userId:user?._id,token:refreshToken,expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)})
@@ -127,7 +135,7 @@ export const signOut = async (req, res, next) => {
         const refreshToken =  req.body.refreshToken || req.cookies.refreshToken ;
         // Extract type and userId from request body, defaulting type to "One"
         const { type , userId } = req.body;
-
+        
         
         // If logging out from a single session
         if (type === "One") {
@@ -167,7 +175,13 @@ export const signOut = async (req, res, next) => {
                 logger.info("Deleting refresh token from cookies");ß
                res.clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" });
             }
+            // clear refresh token from redis 
+            logger.info("Deleting refresh token from redis")
 
+           
+            
+            await redisClient.del(`refreshToken:${req.decoded.userId}`)
+            // console.log(req.decoded.userId);
         // Respond with success message after logout
                 res.status(200).json({ success: true, message: "Logged out Successfully" });
     } catch (error) {
@@ -181,10 +195,19 @@ export const accessToken = async (req, res, next) => {
       logger.info("Acess token generation started after validation");
   
       const refreshToken =  req.body.refreshToken || req.cookies.refreshToken ;
-
-    // verify refresh token
+      // verify refresh token
       const decoded = verifyRefreshToken(refreshToken);
       const { userId } = decoded;
+    // check if refresh token is valid in redis
+    const refreshTokenRedis=await redisClient.get(`refreshToken:${userId}`)
+    console.log(refreshTokenRedis);
+    
+    if(!refreshTokenRedis || refreshTokenRedis!==refreshToken)
+    {
+        const error=new Error("Invalid refresh token")
+        error.status=401;
+        throw error
+    }
   
       // Find user by ID
       const user = await User.findById(userId).lean();
