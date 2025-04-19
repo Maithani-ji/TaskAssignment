@@ -1,11 +1,13 @@
+
 import crypto from "crypto";
 import bcrypt from "bcrypt"; 
 import User from "../models/User.js";
 import { logger } from "../config/logger.js";
-import { sendVerificationEmail } from "../service/emailService.js";
+// import { sendVerificationEmail } from "../service/emailService.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import { RefreshToken } from "../models/RefreshToken.js";
 import {redisClient} from "../config/redis.js";
+import { emailQueue } from "../queues/emailQueue.js";
 
 
 // Registering new user with $-express-validators
@@ -13,7 +15,7 @@ export const register = async (req, res,next) => {
     try {
         
         logger.info("Recieved Registration Request after validation")
-        const { name, email, password} = req.body;
+        const { name, email, password,role="employee"} = req.body;
 
       
 
@@ -32,15 +34,29 @@ export const register = async (req, res,next) => {
         const verificationToken = crypto.randomBytes(32).toString("hex");
 
         // ✅ Create user
-        const user = await User.create({ name, email, password: hashedPassword, verificationToken });
+        const user = await User.create({ name, email, password: hashedPassword, verificationToken ,role });
        
         // ✅ Send success response
         res.success(201,"User created succesfully & Email Verification is being sent")
         
        // ✅ Call email service separately && for larger we can create seperate api call for this which redirect to that mail sending api
        
-        await sendVerificationEmail({ email: user.email, verificationToken: user.verificationToken });
-    
+        // await sendVerificationEmail({ email: user.email, verificationToken: user.verificationToken });
+
+        
+    //  call email in a redis bull queue to send email in background
+        await emailQueue.add(
+            {email:user.email,
+                verificationToken:user.verificationToken,
+            },
+            {   
+                attempts:3,
+                removeOnComplete:true,
+                removeOnFail:false,
+                delay:0,
+                priority:1,
+                backoff:{type:"exponential",delay:5000},
+            })// push to dlq)
     } catch (error) {
       
        next(error)

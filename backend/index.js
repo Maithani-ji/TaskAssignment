@@ -4,7 +4,7 @@ import app from "./app.js"
 import { logger } from "./src/config/logger.js"
 import { setupGracefulShutdown } from "./src/config/shutdown.js"
 import { closeDB, connectDB } from "./src/config/db.js"
-import { redisClient, connectRedis } from "./src/config/redis.js"
+import {  connectRedis } from "./src/config/redis.js"
 
 
 
