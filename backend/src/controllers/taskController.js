@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { logger } from "../config/logger.js";
 import Task from "../models/Task.js";
 import { paginateWithSkipLimit } from "../utils/pagination.js";
+import { getFullMedaUrl } from "../utils/publicUrlMediaMaker.js";
 
 // create task
 export const createTask=async(req,res,next)=>{
@@ -9,9 +10,15 @@ export const createTask=async(req,res,next)=>{
     logger.info("Creating a new task after validation and authentication")
 
     const{title,description,dueDate,assignedTo}=req.body
-
+        //  collect media files if its exists
+        let mediaUrl=[]
+        if(req.files && req.files.length>0)
+        {
+            logger.info("Media files found and creating url")
+          mediaUrl=getFullMedaUrl(req)
+        }
    
-    const task= await Task.create({title,description,dueDate,assignedTo})
+    const task= await Task.create({title,description,dueDate,assignedTo,media:mediaUrl})
     logger.info("Task created successfully")
     res.success(201,"Task created successfully",{task})
 } catch (error) {
@@ -19,7 +26,7 @@ export const createTask=async(req,res,next)=>{
 }
 }
 
-// get all tasks
+// get all tasks with sacalar pagiantion
 export const getTasks=async(req,res,next)=>{
     try {
     logger.info("Getting all tasks after authentication and validation")
@@ -41,7 +48,57 @@ export const getTasks=async(req,res,next)=>{
         next(error)
 }
 }
+// get all task with cursor pagination
+export const getTasksWithCursor=async(req,res,next)=>{
+try {
+    const limit=parseInt(req.query.limit)||10;
+    const cursor=req.query.cursor;
 
+    const direction=req.query.direction ||"next"
+    const query={}
+
+    // cursor filter based on direction
+    if(cursor)
+    {
+        // since we go from latest to oldest
+        const cursorId=new mongoose.Types.ObjectId(cursor)
+        query._id=direction==="next"
+        ? 
+        {$lt: cursorId}//fetch older item for next page
+        :
+        {$gt:cursorId}// fetch newer item for previous page
+    }
+    const sortOrder= direction==="next"? -1:1;// newest to oldest
+
+    let items=await Task.find(query).sort({_id:sortOrder}).limit(limit+1).populate({ path:"assignedTo",select:"-password" }).lean()
+    //  sorting based on cursor field and limit +1 to see if there is next page or not
+    const hasMore=items.length>limit
+    if(hasMore)
+    {
+        items.pop()
+    }
+    if(direction==="prev" && items.length >0)
+    {
+        items=items.reverse()//to match the sequence othersie it wont be arranged like new to old
+    }
+    let nextCursor = null;
+    let prevCursor = null;
+
+    if (direction === "next") {
+        nextCursor = hasMore ? items[items.length - 1]?._id : null;
+        prevCursor = cursor ? items[0]?._id : null;
+      } else {
+        // direction === "prev"
+        nextCursor = cursor ? items[items.length - 1]?._id : null;
+        prevCursor = hasMore ? items[0]?._id : null;
+      }
+
+
+    res.success(200,"Tasks fetched successfully",{tasks:items,nextCursor,prevCursor})
+} catch (error) {
+    next(error)
+}
+}
 // get a particular task
 export const getTaskById=async(req,res,next)=>{
     try {

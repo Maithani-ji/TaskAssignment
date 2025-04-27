@@ -1,14 +1,20 @@
 import express from "express";
-import { createTask, deleteTaskById, getMonthlyTaskCompletedTrend, getOverdueStatus, getOverdueTaskByUser, getTaskById, getTasks, getTasksByUser, getTasksCountByUser, getTasksDueByMonth, getTaskSummary, getTopEmployee, updateTaskById } from "../controllers/taskController.js";
+import { createTask, deleteTaskById, getMonthlyTaskCompletedTrend, getOverdueStatus, getOverdueTaskByUser, getTaskById, getTasks, getTasksByUser, getTasksCountByUser, getTasksDueByMonth, getTaskSummary, getTasksWithCursor, getTopEmployee, updateTaskById } from "../controllers/taskController.js";
 import { headerAuthentication } from "../middilewares/headerAuthHandler.js";
 import { taskCreationValidationRules, taskDeleteValidationRules, taskFetchAllValidationRules, taskFetchByIdValidationRules, taskFetchByUserIdValidationRules, taskOverdueStatusValidationRules, taskUpdateValidationRules } from "../validators/taskValidator.js";
 import { validate } from "../middilewares/validateHandler.js";
+import { multerFactory } from "../middilewares/mediaHandler.js";
 
 const taskRoute=express.Router()
 
-taskRoute.post("/create-task",headerAuthentication,taskCreationValidationRules(),validate,createTask)
+taskRoute.post("/create-task",headerAuthentication,multerFactory({
+  mode: "array",
+  fieldName: "files",
+  maxCount: 5,
+}),taskCreationValidationRules(),validate,createTask)
 
 taskRoute.get("/tasks",headerAuthentication,taskFetchAllValidationRules(),validate,getTasks)
+taskRoute.get("/tasks-cursor",headerAuthentication,taskFetchAllValidationRules(),validate,getTasksWithCursor)
 taskRoute.get("/task-by-id/:id",headerAuthentication,taskFetchByIdValidationRules(),validate,getTaskById)
 taskRoute.get("/tasks-by-user/:id",headerAuthentication,[...taskFetchByIdValidationRules(),taskFetchByUserIdValidationRules()],validate,getTasksByUser)
 taskRoute.get("/:id/overdue-task-status",headerAuthentication,taskOverdueStatusValidationRules(),validate,getOverdueStatus)

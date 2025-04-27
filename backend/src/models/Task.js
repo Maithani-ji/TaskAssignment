@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const taskSchema= new mongoose.Schema({
     title:{type:String,required:true},
     description:{type:String,required:true},
@@ -17,6 +18,8 @@ const taskSchema= new mongoose.Schema({
     },
     status:{type:String,enum:["pending","completed"], default:"pending"},
     assignedTo:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true},
+    media:[String]
+    ,
 },{
     timestamps: true, // Automatically add createdAt and updatedAt fields to the schema.
     strict: "throw",

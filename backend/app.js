@@ -1,3 +1,6 @@
+
+import { fileURLToPath } from "url";
+import path, { dirname } from "path";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -5,6 +8,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import compression from "compression";
 import cookieParser from "cookie-parser";
+
 import { requestLogger } from "./src/middilewares/requestLogger.js";
 import { logger } from "./src/config/logger.js";
 // Api  Routes 
@@ -17,7 +21,9 @@ import { successHandler } from "./src/middilewares/succesHandler.js";
 import { tokenBucketLimiter } from "./src/middilewares/rateLimitterHandler.js";
 
 
-
+// Fix __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
  
 dotenv.config(); 
 
@@ -76,6 +82,8 @@ app.use(tokenBucketLimiter("rate:global",{}))
 app.use("/api/auth",authRoute)
 app.use("/api/task",taskRoute)
 app.use("/api/user",userRoute)
+// Serve static files from the 'uploads' directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Error handling no route middleware
 app.use(notFoundHandler)
