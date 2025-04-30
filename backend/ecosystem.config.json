@@ -1,0 +1,36 @@
+{
+  "apps": [
+    {
+      "name": "email-worker",
+      "script": "src/workers/emailWorker.js",
+      "instances": 1,
+      "autorestart": true,
+      "restart_delay": 5000,        
+      "max_restarts": 3,             
+      "watch": true     
+    },
+    {
+      "name": "failed-job-worker",
+      "script": "src/workers/failedJobWorker.js",
+      "instances": 1,
+      "autorestart": true,
+      "restart_delay": 5000,        
+      "max_restarts": 3,             
+      "watch": true     
+    },
+    {
+      "name": "backend",
+      "script": "./index.js",
+      "instances": 1,
+      "exec_mode": "cluster",
+     "restart_delay": 5000,        
+    "max_restarts": 3,          
+    "autorestart": true ,       
+    "watch": true,          
+      "wait_ready": true,
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  ]
+}

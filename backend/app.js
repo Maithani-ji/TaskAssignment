@@ -2,11 +2,10 @@
 import { fileURLToPath } from "url";
 import path, { dirname } from "path";
 import express from "express";
-import cors from "cors";
+
 import dotenv from "dotenv";
 import morgan from "morgan";
-import helmet from "helmet";
-import compression from "compression";
+
 import cookieParser from "cookie-parser";
 
 import { requestLogger } from "./src/middilewares/requestLogger.js";
@@ -19,6 +18,7 @@ import userRoute from "./src/routes/userRoutes.js";
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
 import { tokenBucketLimiter } from "./src/middilewares/rateLimitterHandler.js";
+import { securityMiddlewares } from "./src/middilewares/securityHandler.js";
 
 
 // Fix __dirname for ES Modules
@@ -34,37 +34,9 @@ app.use(express.urlencoded({ extended: true }));  // Optional: for form data
 // Use cookie-parser middleware
 app.use(cookieParser());
 
-app.use(cors())
-//  CORS EXTRAS...
+// security middleware
+app.use(securityMiddlewares)
 
-// const corsOptions = {
-//     origin: "http://example.com",  // Allow only requests from this origin
-//     methods: ["GET", "POST"],     // Allow only GET and POST methods
-//   };
-//   app.use(cors(corsOptions));
-
-
-// for basic daefault protection
-// can also customise it into middileware for more security
-app.use(helmet())
-
-// for api response ,payloads to compress the data to be send to client
-app.use(compression({
-    level:6,// mid level compression... 1 to 9 1 (fast, least compression) to (slow, high compression).
-    threshold:0,//This means all responses will be compressed, regardless of size.
-    // threshold: 1024, // compress data larger than 1024 kb
-    filter: (req, res) => {
-        if (req.headers["accept-encoding"]?.includes("gzip")) {
-            return true; // Enable compression if client supports gzip
-        }
-    
-        if (req.headers["x-no-compression"]) {
-            return false; // Disable compression if client explicitly requests no compression
-        }
-    
-        return compression.filter(req, res); // Use default behavior
-    },
-}))
 
 // for standalone use 
 // app.use(morgan("dev"))

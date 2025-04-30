@@ -29,8 +29,10 @@ process.on("unhandledRejection",(err)=>{
 })
 
 const PORT_URL = process?.env?.PORT || 3001
-
-
+// for checking of pm2 restart in case of error
+// setTimeout(() => {
+//     throw new Error("Simulated crash!");
+//   }, 5000);
 // Connect to MongoDB
 await connectDB();
 await connectRedis()
