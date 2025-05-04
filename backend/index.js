@@ -5,39 +5,46 @@ import { logger } from "./src/config/logger.js"
 import { setupGracefulShutdown } from "./src/config/shutdown.js"
 import { closeDB, connectDB } from "./src/config/db.js"
 import {  connectRedis } from "./src/config/redis.js"
+import { initSocket } from "./src/config/socket.js"
 
 
 
 
 dotenv.config()
 
-// Error handling for server
-process.on("uncaughtException",(err)=>{
-    logger.error(`[UNCAUGHT EXCEPTION] : ${err.message}`,
-        {stack:err.stack})
-    process.exit(1)
-})
+dotenv.config();
 
+// Catch synchronous exceptions (e.g., undefined variables)
+process.on("uncaughtException", (err) => {
+  logger.error(`[UNCAUGHT EXCEPTION]: ${err.message}`, { stack: err.stack });
+  process.exit(1);
+});
 
-// handle unhandled promises
-process.on("unhandledRejection",(err)=>{
-    logger.error(`[UNHANDLED REJECTION]: ${err.message}`,
-        {
-            stack:err.stack,
-        },
-    )
-})
+// Catch unhandled promise rejections (e.g., failed DB ops)
+process.on("unhandledRejection", (err) => {
+  logger.error(`[UNHANDLED REJECTION]: ${err.message}`, { stack: err.stack });
+});
+
 
 const PORT_URL = process?.env?.PORT || 3001
 // for checking of pm2 restart in case of error
 // setTimeout(() => {
 //     throw new Error("Simulated crash!");
 //   }, 5000);
-// Connect to MongoDB
-await connectDB();
-await connectRedis()
-const server=http.createServer(app)
 
+// Step 1: Connect to MongoDB
+await connectDB();
+
+// Step 2: Connect to Redis
+await connectRedis();
+
+// Step 3: Create HTTP server from Express app
+const server = http.createServer(app);
+
+// Step 4: Initialize Socket.IO on the server
+await initSocket(server);
+
+// Server starts
 server.listen(PORT_URL, () => {
     logger.info(`Server running on port ${PORT_URL}`)
 })

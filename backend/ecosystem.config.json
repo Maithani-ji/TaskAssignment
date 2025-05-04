@@ -1,6 +1,12 @@
 {
   "apps": [
     {
+      "name": "lint",
+      "script": "npm",
+      "args": "run lint",
+      "watch": false
+    },
+    {
       "name": "email-worker",
       "script": "src/workers/emailWorker.js",
       "instances": 1,

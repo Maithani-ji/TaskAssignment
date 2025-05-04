@@ -2,7 +2,7 @@
 envTxt.txt
 # Node.js dependencies
 node_modules/
-
+uploads/
 # Logs
 logs/
 *.log

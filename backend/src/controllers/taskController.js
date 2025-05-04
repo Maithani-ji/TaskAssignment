@@ -1,30 +1,58 @@
 import mongoose from "mongoose";
 import { logger } from "../config/logger.js";
 import Task from "../models/Task.js";
+import { Room } from "../models/Room.js";
 import { paginateWithSkipLimit } from "../utils/pagination.js";
 import { getFullMedaUrl } from "../utils/publicUrlMediaMaker.js";
 
-// create task
-export const createTask=async(req,res,next)=>{
-    try {
-    logger.info("Creating a new task after validation and authentication")
 
-    const{title,description,dueDate,assignedTo}=req.body
-        //  collect media files if its exists
-        let mediaUrl=[]
-        if(req.files && req.files.length>0)
-        {
-            logger.info("Media files found and creating url")
-          mediaUrl=getFullMedaUrl(req)
-        }
-   
-    const task= await Task.create({title,description,dueDate,assignedTo,media:mediaUrl})
-    logger.info("Task created successfully")
-    res.success(201,"Task created successfully",{task})
-} catch (error) {
-        next(error)
-}
-}
+// create task
+// Create task and associated chat room
+export const createTask = async (req, res, next) => {
+    try {
+      logger.info("🔧 Creating a new task");
+  
+      const { title, description, dueDate, assignedTo } = req.body;
+  
+      // Handle media uploads if any
+      let mediaUrl = [];
+      if (req.files && req.files.length > 0) {
+        logger.info("🖼️ Media files detected — generating URLs");
+        mediaUrl = getFullMedaUrl(req);
+      }
+  
+      // Create the task
+      const task = await Task.create({
+        title,
+        description,
+        dueDate,
+        assignedTo,
+        media: mediaUrl,
+      });
+  
+      logger.info("✅ Task created. Now creating room...");
+  
+      // Create the chat room for this task
+      const room = await Room.create({
+        task: task._id,
+        members: [
+         new mongoose.Types.ObjectId(task.assignedTo),
+         new mongoose.Types.ObjectId(req.decoded.userId),
+        ],
+        createdBy: new mongoose.Types.ObjectId(req.decoded.userId),
+      });
+  
+      logger.info("🎉 Task and Room created successfully");
+  
+      return res.success(201, "Task and room created successfully", {
+        task,
+        room,
+      });
+    } catch (error) {
+      logger.error("❌ Error in createTask controller", error);
+      next(error);
+    }
+  };
 
 // get all tasks with sacalar pagiantion
 export const getTasks=async(req,res,next)=>{
