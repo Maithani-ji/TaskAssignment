@@ -12,7 +12,6 @@ import { initSocket } from "./src/config/socket.js"
 
 dotenv.config()
 
-dotenv.config();
 
 // Catch synchronous exceptions (e.g., undefined variables)
 process.on("uncaughtException", (err) => {

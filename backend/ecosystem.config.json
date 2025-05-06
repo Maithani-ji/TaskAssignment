@@ -1,11 +1,6 @@
 {
   "apps": [
-    {
-      "name": "lint",
-      "script": "npm",
-      "args": "run lint",
-      "watch": false
-    },
+   
     {
       "name": "email-worker",
       "script": "src/workers/emailWorker.js",
@@ -13,7 +8,8 @@
       "autorestart": true,
       "restart_delay": 5000,        
       "max_restarts": 3,             
-      "watch": true     
+      "watch": true   ,
+      "ignore_watch": ["src/logs"]
     },
     {
       "name": "failed-job-worker",
@@ -22,7 +18,8 @@
       "autorestart": true,
       "restart_delay": 5000,        
       "max_restarts": 3,             
-      "watch": true     
+      "watch": true     ,
+      "ignore_watch": ["src/logs"]
     },
     {
       "name": "backend",
@@ -32,7 +29,8 @@
      "restart_delay": 5000,        
     "max_restarts": 3,          
     "autorestart": true ,       
-    "watch": true,          
+    "watch": true,         
+    "ignore_watch": ["src/logs"], 
       "wait_ready": true,
       "env": {
         "NODE_ENV": "production"

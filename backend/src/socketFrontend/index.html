@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Chat Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+    input, button { padding: 10px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Socket.IO Chat Tester</h2>
+
+  <label>User ID: <input type="text" id="userId" placeholder="Your user ID" /></label><br/>
+  <label>Task ID (Room): <input type="text" id="taskId" placeholder="Task ID to join room" /></label><br/>
+  <label>Temp ID: <input type="text" id="tempId" placeholder="Temporary ID for message" /></label><br/>
+  <label>Message: <input type="text" id="message" placeholder="Type your message..." /></label><br/>
+  <button onclick="connectSocket()">Connect</button>
+  <button onclick="joinRoom()">Join Room</button>
+  <button onclick="sendMessage()">Send Message</button>
+
+  <div id="log"></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- to  connect socket client -->
+  <script>
+    let socket;
+
+    function log(msg) {
+      const logBox = document.getElementById("log");
+      logBox.innerHTML += `<div>${msg}</div>`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function connectSocket() {
+      const token = prompt("Enter JWT token:");
+      if (!token) {
+        alert("Token required");
+        return;
+      }
+
+      socket = io("http://localhost:PORT_NO_used_in_backend", {
+        auth: { token },  // Attach token for socket authentication
+        transports: ["websocket"],
+      });
+
+      socket.on("connect", () => {
+        log("✅ Connected to socket: " + socket.id);
+        const userId = document.getElementById("userId").value;
+        socket.emit("user:join", { userId });
+      });
+
+      socket.on("user:joined", (userId) => log("👤 User joined: " + userId));
+      socket.on("room:joined", (userId) => log("🟢 User joined room: " + userId));
+      socket.on("message:status:sent", (msg) => log("📨 Sent: " + msg.content));
+      socket.on("message:status:delivered", (msg) => log("✅ Delivered: " + msg.content));
+      socket.on("message:status:seen", (msg) => log("👁️ Seen: " + msg.content));
+      socket.on("typing:start", (userId) => log("✍️ " + userId + " is typing..."));
+      socket.on("typing:stop", (userId) => log("🛑 " + userId + " stopped typing"));
+      socket.on("error", (data) => log("❌ Error: " + data.message));
+      socket.on("error-message-not-created", (data) => log("⚠️ " + data.message));
+      socket.on("error-message-not-updated", (data) => log("⚠️ " + data.message));
+      socket.on("user:offline", ({ userId }) => log("🔴 User offline: " + userId));
+      socket.on("userDuplicateData:offline", ({ userId }) => log("🔴 Duplicate offline: " + userId));
+    }
+
+    function joinRoom() {
+      const taskId = document.getElementById("taskId").value;
+      socket.emit("room:join", { taskId });
+    }
+
+    function sendMessage() {
+      const roomId = document.getElementById("taskId").value;
+      const content = document.getElementById("message").value;
+      const tempId = document.getElementById("tempId").value;
+      socket.emit("message:send", { roomId, content, tempId }, (ack, message) => {
+        if (ack.success) {
+          log("✅ Ack: Message sent with ID: " + message._id);
+        } else {
+          log("❌ Message send failed: " + message);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
