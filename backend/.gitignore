@@ -54,5 +54,7 @@ test-results/
 .env.local
 .env.development
 .env.production
+generated/
+
 # Ignore macOS AppleDouble files (._filename)
 ._*

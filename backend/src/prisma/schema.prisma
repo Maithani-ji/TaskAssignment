@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql" // can use other db like sql , mongdb , coackroach db with prsima for quering
+  url      = env("DATABASE_URL")
+}
+
+// Attribute	Description	Example
+
+// @id	Primary key,	id String @id
+// @default()	Default value,	createdAt DateTime @default(now())
+// @unique	Enforce uniqueness,	email String @unique
+// ?	Optional (nullable),	bio String?
+// []	One-to-many relation,	posts Post[]
+// @relation()	Define relations between models,	user User @relation(...)
+
+// Type	Description
+// String	Text, email, UUIDs
+// Int	Integer numbers
+// Float	Decimal numbers
+// Boolean	true or false
+// DateTime	Date and time
+// Decimal	Precise decimal (money)
+// Json	Raw JSON objects
+// Bytes	Binary data (files)
+// BigInt	Large integers
+
+enum Role {
+EMPLOYEE
+MANAGER
+}
+
+model User {
+  id        Int   @id @default(autoincrement()) // Primary key (manually assigned or UUID if default added)
+  name      String                         // Required name field
+  email     String   @unique               // Unique constraint on email
+  // email    String @unique @map("user_email")  // Maps `email` in Prisma to `user_email` in DB
+  password  String                         // Password field (no validation here, handled in app logic)
+  role      Role @default(EMPLOYEE)
+  tasks     Task[]                         // One-to-many relation with Task model
+  createdAt DateTime @default(now())       // Auto-set when record is created
+  updatedAt DateTime @updatedAt            // Auto-updates whenever the record is updated
+  // @@map("tbl_users")  // Map model `User` to table `tbl_users`
+  // @@id([1,2]) composite primary key
+}
+
+enum Status {
+  PENDING 
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Task {
+  id   Int   @id @default(autoincrement())
+  title String
+  description String?
+  status Status @default(PENDING)
+  userId Int
+  user User @relation(fields: [userId],references: [id])
+  dueDate DateTime
+  createdAt DateTime @default(now())       // Auto-set when record is created
+  updatedAt DateTime @updatedAt            // Auto-updates whenever the record is updated
+}
