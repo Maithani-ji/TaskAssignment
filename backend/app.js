@@ -14,6 +14,7 @@ import { logger } from "./src/config/logger.js";
 import authRoute from "./src/routes/authRoutes.js" 
 import taskRoute from "./src/routes/taskRoutes.js";
 import userRoute from "./src/routes/userRoutes.js";
+import userSqlRoute from "./src/routes/userSqlRoutes.js";
 // Error middlewares
 import { errorHandler, notFoundHandler } from "./src/middilewares/errorHandler.js";
 import { successHandler } from "./src/middilewares/succesHandler.js";
@@ -54,6 +55,7 @@ app.use(tokenBucketLimiter("rate:global",{}))
 app.use("/api/auth",authRoute)
 app.use("/api/task",taskRoute)
 app.use("/api/user",userRoute)
+app.use("/api/userSql",userSqlRoute)
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
