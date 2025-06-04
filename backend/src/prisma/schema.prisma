@@ -66,6 +66,8 @@ model Task {
   status Status @default(PENDING)
   userId Int
   user User @relation(fields: [userId],references: [id])
+  // user User @relation(fields: [userId],references: [id], onDelete:Cascade)  for casscade deletion when user gets deleted
+
   dueDate DateTime
   createdAt DateTime @default(now())       // Auto-set when record is created
   updatedAt DateTime @updatedAt            // Auto-updates whenever the record is updated

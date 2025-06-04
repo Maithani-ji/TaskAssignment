@@ -109,8 +109,16 @@ export const getTasks=async(req,res,next)=>{
                 //         },
                 //     }},
                 
+       
+
             },
         )
+
+
+       // // using raw query 
+       
+        // const tasks=await prisma.$queryRaw`SELECT * FROM "User" u LEFT JOIN "Task" t ON u.id=t."userId" WHERE u.id=${Number(userId)}`
+
         res.success(200,"Tasks fetched successfully",tasks)
     } catch (error) {
         next(error)
@@ -175,6 +183,102 @@ export const getTaskPaginated=async(req,res,next)=>{
             },
         })
         } catch (error) {
+        next(error)
+    }
+}
+
+export const getTaskAggregation=async(req,res,next)=>
+{
+    logger.info("Get task aggregation process started")
+    try {
+        const tasks=await prisma.task.groupBy(
+            {
+                by:["status","userId"],
+                _count:{ _all:true },
+            },
+        )
+        res.success(200,"Task aggregation fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const cascadeDeletion= async(req,res,next)=>{
+    logger.info("Cascade deletion process started")
+    try {
+        const {id}=req.params
+      const data=await prisma.$transaction( async(tx)=>{
+        const tasks=await tx.task.deleteMany(
+            {
+                where:{
+                    userId:Number(id),
+                },
+            },
+        )
+
+        const user =await tx.user.delete(
+            {
+                where:{
+                   id:Number(id),
+                },
+                
+            },
+        )
+
+        return {tasks,user}
+      })
+      res.success(200,"Data deleted successfully",data)
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+export const getTaskByRaw=async(req,res,next)=>{
+    try {
+        logger.info("get task by raw query")
+ 
+        const {id}=req.params
+        
+        // $queryRaw for raw query for SELECT ie only for get and not for insert .uupdate ,delete return rows 
+
+        const tasks=await prisma.$queryRaw`SELECT * FROM "Task" WHERE "userId"=${Number(id)}`
+       
+        //  $executeRaw for insert update and delete op , doesnt return objecy ,just no of affected rows
+        
+        // const tasks=await prisma.$executeRaw`SELECT * FROM "Task" WHERE "userId"=${Number(id)}`
+//    O/P NUMBER OF ROWS AFFECTED
+    res.success(200,"Task fetched successfully",tasks)
+    } catch (error) {
+        next(error)
+    }
+    
+    
+}
+
+//  using custom function in postgresql
+
+export const getOverDueTasks=async(req,res,next)=>{
+    try {
+        logger.info("Get over due tasks process started")
+    //     make this function run on start of sql initialization not on everycall
+    //  create a diff migration  file ,add the raw sql code 
+        await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION get_over_due_tasks(due_date DATE)
+        RETURNS INT AS 
+        $$
+        BEGIN
+        RETURN GREATEST(0,DATE_PART('day',NOW()-due_date));
+        END
+        $$ LANGUAGE plpgsql;
+        `)
+
+        const tasks = await prisma.$queryRawUnsafe(`
+            SELECT *, get_over_due_tasks("dueDate"::DATE) AS "overdueDays"
+            FROM "Task"
+            WHERE get_over_due_tasks("dueDate"::DATE) > 0;
+          `);
+        res.success(200,"Tasks fetched successfully",tasks)
+    } catch (error) {
         next(error)
     }
 }
