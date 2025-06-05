@@ -71,4 +71,5 @@ model Task {
   dueDate DateTime
   createdAt DateTime @default(now())       // Auto-set when record is created
   updatedAt DateTime @updatedAt            // Auto-updates whenever the record is updated
+  @@index([status,id])
 }

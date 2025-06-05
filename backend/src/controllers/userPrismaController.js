@@ -261,21 +261,44 @@ export const getTaskByRaw=async(req,res,next)=>{
 export const getOverDueTasks=async(req,res,next)=>{
     try {
         logger.info("Get over due tasks process started")
-    //     make this function run on start of sql initialization not on everycall
-    //  create a diff migration  file ,add the raw sql code 
-        await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION get_over_due_tasks(due_date DATE)
-        RETURNS INT AS 
-        $$
-        BEGIN
-        RETURN GREATEST(0,DATE_PART('day',NOW()-due_date));
-        END
-        $$ LANGUAGE plpgsql;
-        `)
+
+    //     made  this function run on start of sql initialization not on everycall
+    
+    //  created a diff migration  file ,add the raw sql code of this function and indexing
+
+
+        // await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION get_over_due_tasks(due_date DATE)
+        // RETURNS INT AS 
+        // $$
+        // BEGIN
+        // RETURN GREATEST(0,DATE_PART('day',NOW()-due_date));
+        // END
+        // $$ LANGUAGE plpgsql;
+        // `)
+
+
+        //  View is also a custom function in postgresql
+        //         Exactly! In simple terms:
+
+        // When you run a query on a view, it doesn't pull data from a stored list or snapshot. Instead, it runs the view’s underlying query on the actual tables right then and there and shows you the latest, up-to-date results.
+
+        // So, a view is like a saved query — not a stored copy of data.
+
+
+
+        // Triggers
+        // Trigger = automatic action fired by DB on certain events (insert/update/delete).
+
+        // You create a trigger function that defines what to do.
+
+        // You attach the trigger to a table and specify when it should fire.
+
+        // It helps keep your data consistent or automate repetitive tasks.
 
         const tasks = await prisma.$queryRawUnsafe(`
-            SELECT *, get_over_due_tasks("dueDate"::DATE) AS "overdueDays"
+            SELECT *, get_over_due_status("dueDate"::DATE) AS "overdueDays"
             FROM "Task"
-            WHERE get_over_due_tasks("dueDate"::DATE) > 0;
+            WHERE get_over_due_status("dueDate"::DATE) > 0;
           `);
         res.success(200,"Tasks fetched successfully",tasks)
     } catch (error) {
