@@ -3,6 +3,8 @@ name: Basic CI pipeline
 on:
   push:
     branches: [ "cicd" ]
+  pull_request:
+    branches: [ "cicd" ]
 
 
 jobs:
@@ -20,6 +22,8 @@ jobs:
 
     - name: Install dependencies      
       run: npm install
+      working-directory: backend
 
     - name: Run lint 
       run: npm run lint 
+      working-directory: backend
