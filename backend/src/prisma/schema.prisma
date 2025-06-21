@@ -7,7 +7,9 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
+  binaryTargets = ["native", "darwin-arm64", "linux-musl-arm64-openssl-3.0.x"]
 }
+
 
 datasource db {
   provider = "postgresql" // can use other db like sql , mongdb , coackroach db with prsima for quering
