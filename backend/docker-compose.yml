@@ -3,7 +3,7 @@ services:
   backend:
   # changes from build to image: to use Dockerfile image which is publicly in GHCR
     # build: .
-    image: ghcr.io/maithani-ji/task-backend:v1.0.2
+    image: ghcr.io/maithani-ji/task-backend:v1.0.4
     ports:
       - "3000:3000"
     env_file: .env
