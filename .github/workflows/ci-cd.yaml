@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "cicd" ]
+    branches: [  "cicd-docker"]
 
 jobs:
   lint:
