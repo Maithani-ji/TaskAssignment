@@ -11,7 +11,9 @@ services:
       - redis
       - postgres
     restart: always  
-
+    command: >
+      sh -c "npx prisma migrate deploy --schema=src/prisma/schema.prisma &&
+         pm2-runtime ecosystem.config.json" 
   redis:
     image: redis:alpine
     ports:
