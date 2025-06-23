@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [  "cicd-docker"]
+    branches: ["cicd-docker"]
 
 jobs:
   lint:
@@ -51,5 +51,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/task-backend:v1.0.2
-            ghcr.io/${{ github.repository_owner }}/task-backend:${{ github.sha }}
+            ghcr.io/maithani-ji/task-backend:v1.0.2
+            ghcr.io/maithani-ji/task-backend:${{ github.sha }}
